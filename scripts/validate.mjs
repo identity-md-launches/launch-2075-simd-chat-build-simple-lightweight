@@ -324,8 +324,8 @@ try {
         .locator(".coin-row")
         .first()
         .locator(".mentions-metric strong")
-        .innerText(),
-      "3",
+        .textContent(),
+      "3 post",
     );
     assert.equal(
       await page

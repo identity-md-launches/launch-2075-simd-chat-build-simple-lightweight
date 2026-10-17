@@ -170,7 +170,9 @@ export function aggregatePosts(
       name: COINS[symbol]?.name ?? symbol,
       posts: sorted,
       mentions: sorted.length,
-      authors: new Set(sorted.map((p) => p.author.toLowerCase())).size,
+      authors: new Set(
+        sorted.map((p) => p.author.replace(/^@/, "").toLowerCase()),
+      ).size,
       engagement: sorted.reduce((sum, p) => sum + p.likes + p.reposts, 0),
       latest: Date.parse(sorted[0].createdAt),
       activity,

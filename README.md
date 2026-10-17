@@ -46,25 +46,30 @@ Contoh struktur kosong yang valid: `{"posts":[]}`. Batas feed: 2 MB dan 20.000 p
 - Post harus mengandung kata **meme** tanpa membedakan huruf besar/kecil, serta cashtag **$** yang dimulai huruf. Panjang ticker maksimal 12 karakter alfanumerik.
 - Hanya post dari 48 jam terakhir menurut jam browser, atau 24 jam bila dipilih. Post bertanggal masa depan dan ID duplikat tidak dihitung.
 - Setiap ticker dihitung sekali per post. Satu post dengan beberapa ticker dapat masuk ke beberapa koin; ringkasan post menghitung ID unik.
+- Jumlah akun mengabaikan awalan `@` opsional dan perbedaan huruf besar/kecil; variasi handle yang sama tetap dihitung satu akun.
 - Urutan awal berdasarkan jumlah post, kemudian jumlah interaksi sebagai pemecah seri. Interaksi = suka + repost. **Paling ramai** memilih empat ticker dengan post terbanyak. Grafik berisi 12 rentang jumlah post, bukan harga atau persentase kenaikan.
 - Nama dan ikon delapan ticker bawaan hanya membantu pengenalan. Ticker lain memakai namanya sendiri dan avatar inisial. Ticker tidak menetapkan identitas atau kontrak token.
 - Pembaruan otomatis memeriksa feed setiap 60 detik selama tab terlihat, dan memeriksa lagi saat tab kembali terlihat. Sakelar **Otomatis** menjeda permintaan. Umur data diperiksa ulang setiap 30 detik. Filter aktif tetap dipertahankan ketika post baru muncul.
+- Detail koin yang sedang terbuka mengikuti data terbaru. Jika semua post keluar dari jendela waktu, detail menunjukkan keadaan kosong dan terisi kembali ketika post yang cocok masuk.
 - Simpanan dan sumber feed disimpan di `localStorage` browser ini, bukan akun bersama. Jika penyimpanan diblokir, antarmuka tetap berfungsi selama sesi dan mengumumkan keterbatasannya.
 
 ## Validasi yang dijalankan
 
 Hasil aktual dan peninjauan keenam domain Better Interface ada di [`artifacts/validation.md`](artifacts/validation.md). Bukti terstruktur ada di [`artifacts/interaction-results.json`](artifacts/interaction-results.json) dan [`artifacts/taste-checks.json`](artifacts/taste-checks.json).
 
+Revisi 17 Oktober 2026 mereproduksi lalu memperbaiki empat temuan: ticker panjang dalam dialog ponsel, satuan post untuk teknologi bantu, normalisasi akun dengan `@`, dan detail yang tertinggal saat feed diperbarui. Pengukuran sebelum/sesudah ada di [`artifacts/revision-baseline.json`](artifacts/revision-baseline.json) dan [`artifacts/revision-results.json`](artifacts/revision-results.json); jawaban per temuan ada di [`.imd-responses.json`](.imd-responses.json).
+
 | Pemeriksaan akhir | Hasil |
 | --- | --- |
-| Build produksi, Vite 7.3.7 | Berhasil; JavaScript 216,09 kB / 68,44 kB gzip, CSS 28,38 kB / 6,20 kB gzip |
+| Build produksi, Vite 7.3.7 | Berhasil; JavaScript 216,44 kB / 68,56 kB gzip, CSS 28,46 kB / 6,22 kB gzip |
 | TypeScript `tsc --noEmit` | Berhasil |
 | Interaksi pada ekspor di `/preview/`, Chromium 141 | 14 kelompok uji lulus |
+| Regresi empat temuan, Chromium 141 | 11 pemeriksaan lulus; termasuk dialog 320/390 px, snapshot aksesibilitas, jumlah akun, polling, kedaluwarsa, dan pemulihan detail |
 | Axe 4.10.3, WCAG A/AA yang dapat diotomasi | 27 aturan lulus, 0 pelanggaran, 0 hasil tidak pasti pada halaman utama |
 | Probe desain taste@1, termasuk mode offline | 16/16 pemeriksaan lulus pada 320, 390, dan 1440 px |
 | Tata letak | Tanpa overflow pada 320, 390, 630, 768, 960, 1150, 1440 px; pembesaran teks 200% juga diperiksa pada 320, 390, 1440 px |
 | Layar pertama 390 × 844 | Tombol Perbarui dan baris koin pertama terlihat utuh |
-| `npm audit --omit=dev` | 0 kerentanan yang dilaporkan |
+| `npm audit --omit=dev` | Ronde awal: 0 kerentanan dilaporkan; tidak diulang pada revisi ini, dependensi tetap |
 | WebKit | Dicoba; gagal diluncurkan karena dependensi sistem tidak tersedia. Tidak diklaim lulus |
 
 Untuk mengulang uji interaksi pada mesin dengan dependensi browser yang sesuai:
@@ -73,9 +78,12 @@ Untuk mengulang uji interaksi pada mesin dengan dependensi browser yang sesuai:
 npx playwright install chromium webkit
 npm run build
 npm run validate
+node scripts/validate-revision.mjs
 ```
 
 `scripts/validate.mjs` menjalankan server sementara dalam prosesnya sendiri, melayani `dist/` di subpath `/preview/`, memakai fixture feed terkontrol, dan menutup server saat selesai. Pembaruan 60 detik diuji dengan jam simulasi, tanpa menunggu satu menit. Hasil dan screenshot diperbarui di `artifacts/`. Browser yang tidak tersedia dicatat sebagai keterbatasan; setidaknya satu browser harus berhasil berjalan agar skrip berhasil. Hasil tersebut bukan sertifikasi aksesibilitas atau validasi data X produksi.
+
+`scripts/validate-revision.mjs` menguji empat temuan pada ekspor yang sama dengan feed HTTPS terkontrol. Mode normal harus lulus seluruh pemeriksaan. Opsi `--baseline` merekam perilaku ekspor sebelum perbaikan tanpa menuntut hasil lulus; jangan menjalankannya pada ekspor akhir jika ingin mempertahankan bukti awal.
 
 Pada mesin pengerjaan ini, dependensi dipasang di `/tmp` dan tidak disertakan dalam repositori. Artefak cache/lock sementara npm dibersihkan sebelum pengiriman. Build memakai `NYIMAK_NODE_MODULES` dan `PATH` untuk toolchain tersebut; typecheck memakai konfigurasi sementara yang memperluas `tsconfig.json` dan hanya memetakan lokasi tipe React eksternal. Instalasi npm biasa menggunakan perintah standar di atas tanpa pengaturan tambahan. Tidak ada cache, browser biner, paket `.tgz`, atau dependensi vendored yang disertakan.
 

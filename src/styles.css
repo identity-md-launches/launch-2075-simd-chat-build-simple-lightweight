@@ -694,9 +694,6 @@ input::placeholder {
   font-size: var(--text-xs);
   color: var(--color-subtle);
 }
-.mobile-metric-label {
-  display: none;
-}
 .activity-cell {
   display: flex;
   align-items: center;
@@ -1040,6 +1037,14 @@ input::placeholder {
   font-size: var(--text-title);
   letter-spacing: -0.03em;
   line-height: 1.35;
+}
+.dialog-heading h2,
+.coin-detail-header > div {
+  min-width: 0;
+}
+.dialog-heading h2,
+.coin-detail-header h3 {
+  overflow-wrap: anywhere;
 }
 .dialog-heading .icon-button {
   margin-inline-end: -6px;

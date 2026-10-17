@@ -17,13 +17,12 @@ import {
   timeAgo,
   validateEndpoint,
   writeStorage,
-  type Coin,
   type Post,
 } from "./data";
 import { CoinAvatar, Hand, Icon, Sparkline } from "./icons";
 
 type View = "all" | "hot" | "saved";
-type DialogState = "source" | "about" | Coin | null;
+type DialogState = "source" | "about" | { symbol: string } | null;
 const REFRESH_MS = 60_000;
 
 function Dialog({
@@ -299,6 +298,12 @@ export default function App() {
     () => aggregatePosts(posts, hours, clock),
     [posts, hours, clock],
   );
+  const selectedSymbol =
+    dialog && typeof dialog === "object" ? dialog.symbol : null;
+  const selectedCoin = coins.find((coin) => coin.symbol === selectedSymbol);
+  const selectedName = selectedSymbol
+    ? selectedCoin?.name ?? COINS[selectedSymbol]?.name ?? selectedSymbol
+    : "";
   const ranked = useMemo(
     () =>
       [...coins].sort(
@@ -666,7 +671,7 @@ export default function App() {
                         <span className="coin-rank">{i + 1}</span>
                         <button
                           className="coin-name-button"
-                          onClick={() => setDialog(coin)}
+                          onClick={() => setDialog({ symbol: coin.symbol })}
                           aria-label={`Lihat detail ${coin.name}`}
                         >
                           <CoinAvatar symbol={coin.symbol} />
@@ -689,7 +694,7 @@ export default function App() {
                       <div className="metric mentions-metric">
                         <strong>
                           {number(coin.mentions)}
-                          <span className="mobile-metric-label"> post</span>
+                          <span className="sr-only"> post</span>
                         </strong>
                         <span>{coin.authors} akun</span>
                       </div>
@@ -713,7 +718,7 @@ export default function App() {
                         <button
                           className="icon-button detail-button"
                           aria-label={`Buka post ${coin.name}`}
-                          onClick={() => setDialog(coin)}
+                          onClick={() => setDialog({ symbol: coin.symbol })}
                         >
                           <Icon name="chevron" size={16} />
                         </button>
@@ -995,26 +1000,26 @@ export default function App() {
           </button>
         </Dialog>
       )}
-      {dialog && typeof dialog === "object" && (
+      {selectedSymbol && (
         <Dialog
-          title={`Percakapan $${dialog.symbol}`}
+          title={`Percakapan $${selectedSymbol}`}
           onClose={() => setDialog(null)}
           wide
         >
           <div className="coin-detail-header">
-            <CoinAvatar symbol={dialog.symbol} size={52} />
+            <CoinAvatar symbol={selectedSymbol} size={52} />
             <div>
-              <h3>{dialog.name}</h3>
+              <h3>{selectedName}</h3>
               <p>
-                {dialog.mentions} post · {dialog.authors} akun · {hours} jam
-                terakhir
+                {selectedCoin?.mentions ?? 0} post · {selectedCoin?.authors ?? 0}{" "}
+                akun · {hours} jam terakhir
               </p>
             </div>
             <button
-              className={`icon-button save-button ${saved.includes(dialog.symbol) ? "is-saved" : ""}`}
-              aria-label={`${saved.includes(dialog.symbol) ? "Hapus" : "Simpan"} ${dialog.name}`}
-              aria-pressed={saved.includes(dialog.symbol)}
-              onClick={() => toggleSave(dialog.symbol)}
+              className={`icon-button save-button ${saved.includes(selectedSymbol) ? "is-saved" : ""}`}
+              aria-label={`${saved.includes(selectedSymbol) ? "Hapus" : "Simpan"} ${selectedName}`}
+              aria-pressed={saved.includes(selectedSymbol)}
+              onClick={() => toggleSave(selectedSymbol)}
             >
               <Icon name="bookmark" />
             </button>
@@ -1025,24 +1030,36 @@ export default function App() {
               : "Post diurutkan dari yang terbaru. Data dan tautan disediakan oleh feed pilihanmu."}
           </p>
           <div className="detail-posts">
-            {dialog.posts.slice(0, 20).map((post) => (
-              <PostItem post={post} demo={demo} key={post.id} />
-            ))}
+            {selectedCoin ? (
+              selectedCoin.posts.slice(0, 20).map((post) => (
+                <PostItem post={post} demo={demo} key={post.id} />
+              ))
+            ) : (
+              <div className="empty-state" role="status">
+                <Icon name="search" size={32} />
+                <h3>Belum ada post yang cocok</h3>
+                <p>
+                  Tidak ada post dengan kata meme dan ${selectedSymbol} dalam{" "}
+                  {hours} jam terakhir. Detail akan diperbarui saat post yang
+                  cocok masuk.
+                </p>
+              </div>
+            )}
           </div>
-          {dialog.posts.length > 20 && (
+          {selectedCoin && selectedCoin.posts.length > 20 && (
             <p className="field-help">
-              Menampilkan 20 post terbaru dari {dialog.posts.length} post.
+              Menampilkan 20 post terbaru dari {selectedCoin.posts.length} post.
             </p>
           )}
           <a
             className="secondary-button full-width"
-            href={`https://x.com/search?q=${encodeURIComponent(`meme $${dialog.symbol}`)}&f=live`}
+            href={`https://x.com/search?q=${encodeURIComponent(`meme $${selectedSymbol}`)}&f=live`}
             target="_blank"
             rel="noopener noreferrer"
           >
-            Cari ${dialog.symbol} di X <Icon name="external" size={16} />
+            Cari ${selectedSymbol} di X <Icon name="external" size={16} />
           </a>
-          {!COINS[dialog.symbol] && (
+          {!COINS[selectedSymbol] && (
             <p className="field-help">
               Nama token ditampilkan sesuai ticker; identitas token belum
               diverifikasi.

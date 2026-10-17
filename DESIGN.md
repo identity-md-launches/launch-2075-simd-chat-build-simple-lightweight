@@ -45,6 +45,8 @@ Font lokal **Manrope**, variable WOFF2 400–800, memakai fallback `Arial, sans-
 
 Angka berubah memakai `font-variant-numeric: tabular-nums`. Nama/ticker tidak dipotong dengan ellipsis: nilai panjang dapat membungkus. URL input tetap dapat digulir secara native. Pembesaran teks 200% diuji untuk overflow halaman pada 320, 390, dan 1440 px; zoom native dan pembaca layar belum diuji.
 
+Pada dialog, `.dialog-heading h2` dan `.coin-detail-header > div` memakai `min-width: 0`; judul dialog dan nama koin memakai `overflow-wrap: anywhere`. Ticker lengkap hingga 12 karakter membungkus pada 320/390 px, dengan ukuran judul tetap 20 px dan kontrol tutup/simpan tetap di dalam dialog.
+
 ## Layout
 
 `.page-width` membatasi konten menjadi 1200 px dengan margin desktop total 96 px. Pada ≤ 1150 px, margin total 64 px; pada ≤ 780 px menjadi 40 px; pada ≤ 370 px menjadi 32 px. Semua bagian memakai tepi konten yang sama.
@@ -79,13 +81,15 @@ Antarmuka pada dasarnya datar. Border tipis menstrukturkan daftar dan kontrol; b
 | `.secondary-button`, `.text-button`, `.icon-button` | `src/styles.css` | Hierarki sekunder; hover/fokus/pressed terpisah; icon-only memakai nama aksesibel |
 | `.view-tabs` | `src/App.tsx` | Tombol toggle dengan `aria-pressed`, bukan tablist; Semua koin, empat teratas, dan Tersimpan; nama Tersimpan tersedia saat label visual disembunyikan |
 | `.search-field`, `.select-field` | `src/App.tsx` | Input search dan select native dengan label; pencarian nama/ticker, periode 24/48 jam, tiga urutan |
-| `.coin-row` | `src/App.tsx` | Nama membuka detail; bookmark toggle disimpan di browser; angka dan sparkline berasal dari post yang lolos filter |
+| `.coin-row` | `src/App.tsx` | Nama membuka detail; bookmark toggle disimpan di browser; angka dan sparkline berasal dari post yang lolos filter; satuan post tersedia lewat `.sr-only` untuk teknologi bantu |
 | `CoinAvatar` | `src/icons.tsx` | SVG lokal untuk delapan ticker; inisial untuk ticker lain. Semuanya dekoratif di samping nama |
 | `Sparkline` | `src/icons.tsx` | 12 bin jumlah post; dekoratif, tidak menyatakan harga. Data post tersedia dalam detail |
 | `Hand` / `Icon` | `src/icons.tsx` | SVG lokal, `currentColor`, dekoratif bila disertai teks. Hand wave 2,2 detik sekali; hover brand .8 detik |
 | Sakelar `.auto-button` | `src/App.tsx` | `role="switch"`, `aria-checked`, label dan posisi knob memberi cue statis; on memeriksa setiap 60 detik saat terlihat |
 | Banner / empty state | `src/App.tsx` | Gagal memuat mempertahankan data lama dan menawarkan Coba lagi; hasil kosong menyebut sebab dan menawarkan Lihat semua koin |
 | Form sumber feed | `src/App.tsx` | Validasi saat submit, pesan terkait input, fokus pada input gagal; koneksi baru harus berhasil sebelum sumber diganti |
+
+Detail koin menyimpan pilihan ticker dan membaca agregat terkini. Post, jumlah akun, dan interaksi mengikuti pembaruan feed serta jendela waktu tanpa menutup dialog. Jika tidak ada post yang cocok, identitas koin, kontrol simpan/tutup, dan pencarian X tetap tersedia bersama keadaan kosong berbahasa Indonesia; post yang masuk berikutnya mengisi detail kembali.
 
 Fokus keyboard memakai outline neon 2 px dan offset 4 px (input 2 px). Forced-colors memakai `Highlight`, tetapi belum diperiksa secara visual. Target minimum/spasi diperiksa oleh probe; beberapa kontrol padat masih lebih kecil dari ukuran nyaman 44 × 44 px, meskipun lolos ambang 24 px/spasi.
 
